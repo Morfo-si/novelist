@@ -16,6 +16,6 @@ go install github.com/Morfo-si/novelist@latest
 
 ```bash
 git clone https://github.com/Morfo-si/novelist.git
-cd glow
+cd novelist
 go build
 ```
