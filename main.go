@@ -13,6 +13,7 @@ import (
 var UserDirs = xdg.UserDirs.Documents
 
 const (
+	CharLimit = 10 * 1024
 	NovelFile = "novelist.md"
 	UnixDate  = "Mon Jan _2 15:04:05 MST 2006"
 )
@@ -25,6 +26,7 @@ func main() {
 		Title("Tell me a story.").
 		Value(&story).
 		Placeholder("What's on your mind?").
+		CharLimit(CharLimit).
 		Run()
 
 	t := time.Now()
