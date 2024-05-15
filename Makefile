@@ -1,4 +1,4 @@
-.PHONY: check-tag check-token publish tag tidy
+.PHONY: check-tag check-token publish tag test tidy
 
 TAG = ${NEW_RELEASE_TAG}
 TARGET = novelist
@@ -15,6 +15,9 @@ ifndef GITHUB_TOKEN
 	exit 1
 endif
 
+build:
+	goreleaser build --clean
+
 publish: tidy tag check-token
 	go install github.com/goreleaser/goreleaser@latest
 	goreleaser release --clean
@@ -22,6 +25,9 @@ publish: tidy tag check-token
 tag: check-tag
 	git tag -a "$(TAG)" -m "$(TAG)"
 	git push origin $(TAG)
+
+test:
+	go test -v ./...
 
 tidy:
 	go mod tidy
