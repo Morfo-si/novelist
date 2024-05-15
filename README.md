@@ -2,7 +2,7 @@
 
 Capture your thoughts and ideas for your next book or story from the command line.
 
-<img width="682" alt="image" src="https://github.com/Morfo-si/novelist/assets/53362/64e81990-40f7-42b7-bc4e-2012d92ad599">
+![Alt Novelist screenshot](https://github.com/Morfo-si/novelist/assets/53362/64e81990-40f7-42b7-bc4e-2012d92ad599 "Novelist")
 
 ## Installation
 
