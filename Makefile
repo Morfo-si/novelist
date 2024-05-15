@@ -17,7 +17,7 @@ endif
 
 publish: tidy tag check-token
 	go install github.com/goreleaser/goreleaser@latest
-	goreleaser release 
+	goreleaser release --clean
 
 tag: check-tag
 	git tag -a "$(TAG)" -m "$(TAG)"
