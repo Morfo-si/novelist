@@ -1,23 +1,27 @@
-.PHONY: check-env publish tag tidy
+.PHONY: check-tag check-token publish tag tidy
 
 TAG = ${NEW_RELEASE_TAG}
 TARGET = novelist
 
-check-env:
-ifndef NEW_RELEASE_TAG
-	$(error Please set the NEW_RELEASE_TAG env variable)
-	exit 1
-endif
+check-tag:
+	ifndef NEW_RELEASE_TAG
+		$(error Please set the NEW_RELEASE_TAG env variable)
+		exit 1
+	endif
 
-publish: tidy tag
-	GOARCH=arm64 GOOS=darwin go build -o $(TARGET)-$(TAG)-darwin-arm64
-	GOARCH=arm64 GOOS=linux go build -o $(TARGET)-$(TAG)-linux-arm64
-	GOARCH=amd64 GOOS=linux go build -o $(TARGET)-$(TAG)-linux-amd64
-	GOARCH=amd64 GOOS=windows go build -o $(TARGET)-$(TAG)-windows-amd64.exe
+check-token:
+	ifndef GITHUB_TOKEN
+		$(error Please set the GITHUB_TOKEN env variable)
+		exit 1
+	endif
 
-tag: check-env
+publish: tidy tag check-token
+	go install github.com/goreleaser/goreleaser@latest
+	goreleaser release 
+
+tag: check-tag
 	git tag -a "$(TAG)" -m "$(TAG)"
 	git push origin $(TAG)
 
-tidy: check-env
+tidy:
 	go mod tidy
