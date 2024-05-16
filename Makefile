@@ -15,7 +15,7 @@ ifndef GITHUB_TOKEN
 	exit 1
 endif
 
-build:
+build: check-tag
 	goreleaser build --clean
 
 publish: tidy tag check-token
