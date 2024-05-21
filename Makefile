@@ -27,7 +27,7 @@ tag: check-tag
 	git push origin $(TAG)
 
 test:
-	go test -v ./...
+	go test -v -cover ./...
 
 tidy:
 	go mod tidy

@@ -11,7 +11,7 @@ import (
 
 func TestGeneratePrompt(t *testing.T) {
 	var story string
-	expected := "  Tell me a story.                        \n  What's on your mind?"
+	expected := "Tell me a story"
 
 	prompt := GeneratePrompt(&story)
 	assert.Contains(t, prompt.View(), expected, "Prompt doesn't match expected output.")

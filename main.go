@@ -68,17 +68,17 @@ func SaveContent(story string, f string) {
 	// Check if any content was provided before saving it
 	if len(story) > 0 {
 		// Open the file for appending.
-		f, err := os.OpenFile(f, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(f, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
+		defer file.Close()
 
 		// Write the current time and the story to the file.
-		f.Write([]byte(fmt.Sprintf("\n## %s\n\n", t.Format(UnixDate))))
-		f.Write([]byte(fmt.Sprintf("%s\n", story)))
+		file.Write([]byte(fmt.Sprintf("\n## %s\n\n", t.Format(UnixDate))))
+		file.Write([]byte(fmt.Sprintf("%s\n", story)))
 
 		// Print the file path where the story is saved.
-		fmt.Println("Okay. Your thoughts have been saved to", f)
+		fmt.Printf("Okay. Your thoughts have been saved to %v", f)
 	}
 }
