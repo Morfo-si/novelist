@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	ERRFAILCREATETEMPIR = "Failed to create temporary directory:"
+	ERRFAILTOREAD = "Failed to read file:"
+	ERRUNEXPECTEDCONTENT = "Unexpected content in file."
+)
+
 func TestGeneratePrompt(t *testing.T) {
 	var story string
 	expected := "Tell me a story"
@@ -22,7 +28,7 @@ func TestFileExists(t *testing.T) {
 	// Prepare a temporary directory for testing.
 	tmpDir, err := os.MkdirTemp("", "file-exists-test")
 	if err != nil {
-		t.Fatal("Failed to create temporary directory:", err)
+		t.Fatal(ERRFAILCREATETEMPIR, err)
 	}
 	defer os.RemoveAll(tmpDir)
 
@@ -40,10 +46,10 @@ func TestFileExists(t *testing.T) {
 	// Check if the file content is correct.
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		t.Fatal("Failed to read file:", err)
+		t.Fatal(ERRFAILTOREAD, err)
 	}
 	expectedContent := "# Welcome to Novelist\n"
-	assert.Equal(t, string(content), expectedContent, "Unexpected content in file.")
+	assert.Equal(t, string(content), expectedContent, ERRUNEXPECTEDCONTENT)
 }
 
 // TestFileExistsExistingFile tests the FileExists function when the file already exists.
@@ -51,7 +57,7 @@ func TestFileExistsExistingFile(t *testing.T) {
 	// Prepare a temporary directory for testing.
 	tmpDir, err := os.MkdirTemp("", "file-exists-test")
 	if err != nil {
-		t.Fatal("Failed to create temporary directory:", err)
+		t.Fatal(ERRFAILCREATETEMPIR, err)
 	}
 	defer os.RemoveAll(tmpDir)
 
@@ -70,10 +76,10 @@ func TestFileExistsExistingFile(t *testing.T) {
 	// Check if the file content is unchanged.
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		t.Fatal("Failed to read file:", err)
+		t.Fatal(ERRFAILTOREAD, err)
 	}
 	expectedContent := "Test content"
-	assert.Equal(t, string(content), expectedContent, "Unexpected content in file.")
+	assert.Equal(t, string(content), expectedContent, ERRUNEXPECTEDCONTENT)
 }
 
 // TestSaveContent tests the SaveContent function.
@@ -81,7 +87,7 @@ func TestSaveContent(t *testing.T) {
 	// Prepare a temporary directory for testing.
 	tmpDir, err := os.MkdirTemp("", "save-content-test")
 	if err != nil {
-		t.Fatal("Failed to create temporary directory:", err)
+		t.Fatal(ERRFAILCREATETEMPIR, err)
 	}
 	defer os.RemoveAll(tmpDir)
 
@@ -105,10 +111,10 @@ func TestSaveContent(t *testing.T) {
 	// Check if the content was written correctly.
 	content, err := os.ReadFile(testFilePath)
 	if err != nil {
-		t.Fatal("Failed to read file:", err)
+		t.Fatal(ERRFAILTOREAD, err)
 	}
 	expectedContent := "\n## " + testTime.Format(UnixDate) + "\n\n" + testStory + "\n"
-	assert.Equal(t, expectedContent, string(content), "Unexpected content in file.")
+	assert.Equal(t, expectedContent, string(content), ERRUNEXPECTEDCONTENT)
 }
 
 // TestSaveContentEmptyStory tests the SaveContent function when an empty story is provided.
@@ -116,7 +122,7 @@ func TestSaveContentEmptyStory(t *testing.T) {
 	// Prepare a temporary directory for testing.
 	tmpDir, err := os.MkdirTemp("", "save-content-test")
 	if err != nil {
-		t.Fatal("Failed to create temporary directory:", err)
+		t.Fatal(ERRFAILCREATETEMPIR, err)
 	}
 	defer os.RemoveAll(tmpDir)
 
