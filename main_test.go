@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ERRFAILCREATETEMPIR = "Failed to create temporary directory:"
-	ERRFAILTOREAD = "Failed to read file:"
+	ERRFAILCREATETEMPIR  = "Failed to create temporary directory:"
+	ERRFAILTOREAD        = "Failed to read file:"
 	ERRUNEXPECTEDCONTENT = "Unexpected content in file."
 )
 

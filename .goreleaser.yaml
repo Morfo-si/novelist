@@ -1,44 +1,73 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
-version: 1
+# .goreleaser.yaml — https://goreleaser.com
+version: 2
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
+    - go mod verify
 
 builds:
-  - env:
+  - id: novelist
+    main: .
+    binary: novelist
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
+    # Inject the git tag as the version string at compile time.
+    ldflags:
+      - -s -w -X main.version={{.Version}}
 
 archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of `uname`.
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
+  - id: default
+    # Use .zip for Windows, .tar.gz for everything else.
+    formats:
+      - tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
 
 changelog:
   sort: asc
+  use: github
   filters:
     exclude:
+      - "^chore:"
       - "^docs:"
       - "^test:"
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: Morfo-si
+    name: novelist
+  # Mark as pre-release if the tag contains a pre-release identifier (e.g. v1.0.0-beta.1).
+  prerelease: auto
+  draft: false
+  footer: |
+    ## Installation
+
+    Download the archive for your platform from the assets below, extract it, and place the `novelist` binary somewhere on your `$PATH`.
+
+    **Linux / macOS**
+    ```sh
+    tar -xzf novelist_{{ .Version }}_linux_amd64.tar.gz
+    sudo mv novelist /usr/local/bin/
+    ```
+
+    **Windows** — extract the `.zip` and add the folder to your `PATH`.

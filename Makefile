@@ -1,33 +1,64 @@
-.PHONY: check-tag check-token publish tag test tidy
+.PHONY: help all build fmt vet test test-cover tidy snapshot tag clean
 
-TAG = ${NEW_RELEASE_TAG}
-TARGET = novelist
+# ----------------------------------------------------------------------------
+# Configuration
+# ----------------------------------------------------------------------------
 
-check-tag:
-ifndef NEW_RELEASE_TAG
-	$(error Please set the NEW_RELEASE_TAG env variable)
-	exit 1
-endif
+GO      := go
+BINARY  := novelist
+CMD     := .
+VERSION := $(shell cat VERSION)
+GOFLAGS := -trimpath
 
-check-token:
-ifndef GITHUB_TOKEN
-	$(error Please set the GITHUB_TOKEN env variable)
-	exit 1
-endif
+# ----------------------------------------------------------------------------
+# Targets
+# ----------------------------------------------------------------------------
 
-build: check-tag
-	goreleaser build --clean
+## help: show this help message
+help:
+	@echo "Available targets:"
+	@grep -E '^## ' $(MAKEFILE_LIST) | sed -E 's/## /  /'
 
-publish: tidy tag check-token
-	go install github.com/goreleaser/goreleaser@latest
-	goreleaser release --clean
+## all: tidy, fmt, vet, test and build
+all: tidy fmt vet test build
 
-tag: check-tag
-	git tag -a "$(TAG)" -m "$(TAG)"
-	git push origin $(TAG)
+## build: compile the binary with the current VERSION injected
+build:
+	$(GO) build $(GOFLAGS) -ldflags "-s -w -X main.version=$(VERSION)" -o $(BINARY) $(CMD)
 
+## fmt: run gofmt on all Go files
+fmt:
+	$(GO) fmt ./...
+
+## vet: run go vet on all packages
+vet:
+	$(GO) vet ./...
+
+## test: run tests
 test:
-	go test -v -cover ./...
+	$(GO) test -v ./...
 
+## test-cover: run tests with coverage profile output to coverage.out
+test-cover:
+	$(GO) test -v -coverprofile=coverage.out ./...
+
+## tidy: ensure go.mod and go.sum are tidy
 tidy:
-	go mod tidy
+	$(GO) mod tidy
+
+## snapshot: run a local GoReleaser build (no publish) to verify the release config
+snapshot:
+	goreleaser release --snapshot --clean --skip=publish
+
+## tag: create and push a signed git tag for the current VERSION (triggers the release workflow)
+##      Edit the VERSION file first, commit it, then run: make tag
+tag:
+	@echo "Tagging v$(VERSION)…"
+	git tag -a v$(VERSION) -m "Release v$(VERSION)"
+	git push origin v$(VERSION)
+	@echo "Tag v$(VERSION) pushed — the release workflow will now build and publish the binaries."
+
+## clean: remove built artifacts
+clean:
+	rm -f $(BINARY) coverage.out
+	rm -rf dist/

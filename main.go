@@ -7,9 +7,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/adrg/xdg"          // Import xdg for cross-platform user directory retrieval.
-	"github.com/charmbracelet/huh" // Import huh for CLI text input.
+	"charm.land/huh/v2"   // Import huh for CLI text input.
+	"github.com/adrg/xdg" // Import xdg for cross-platform user directory retrieval.
 )
+
+// version is injected at build time via -ldflags "-X main.version=..."
+// It falls back to "dev" for local builds without the ldflag set.
+var version = "dev"
 
 // UserDirs specifies the directory where the novel file will be saved.
 var (
@@ -35,6 +39,16 @@ func GeneratePrompt(story *string) *huh.Text {
 
 // main is the main entry point for the Novelist program.
 func main() {
+	// Handle --version / -v as a pre-flight check so users can verify the
+	// version that was injected at build time.
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "--version", "-v", "version":
+			fmt.Printf("novelist %s\n", version)
+			return
+		}
+	}
+
 	var story string // Variable to store the user's story.
 
 	// Prompt user to tell a story.
@@ -75,8 +89,8 @@ func SaveContent(story string, f string) {
 		defer file.Close()
 
 		// Write the current time and the story to the file.
-		file.Write([]byte(fmt.Sprintf("\n## %s\n\n", t.Format(UnixDate))))
-		file.Write([]byte(fmt.Sprintf("%s\n", story)))
+		file.Write(fmt.Appendf(nil, "\n## %s\n\n", t.Format(UnixDate)))
+		file.Write(fmt.Appendf(nil, "%s\n", story))
 
 		// Print the file path where the story is saved.
 		fmt.Printf("Okay. Your thoughts have been saved to %v", f)
