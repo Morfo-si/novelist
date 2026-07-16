@@ -2,37 +2,52 @@ name: Release
 
 on:
   push:
-    # Trigger only when a version tag is pushed (e.g. v1.2.3 or v1.0.0-beta.1).
-    tags:
-      - 'v*'
+    tags: ["v*"]
 
-# GoReleaser needs write access to create the GitHub release and upload assets.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   release:
-    name: Build & Release
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write      # create the release and upload assets
+      id-token: write      # keyless cosign signing and attestation
+      attestations: write  # build provenance
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          # Full history is required for GoReleaser's changelog generation.
-          fetch-depth: 0
+          fetch-depth: 0   # GoReleaser needs full history for the changelog
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: go.mod
-          cache: true
+          check-latest: true
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6
+      - name: Test before releasing
+        run: go test -race -count=1 ./...
+
+      - name: Scan before releasing
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0
+
+      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
         with:
           distribution: goreleaser
           version: "~> v2"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Without this GoReleaser derives the version from git describe, which
+          # is ambiguous when several tags point at one commit -- the ordinary
+          # case of promoting a release candidate to final. It then builds and
+          # publishes under whichever tag it picked, not the one that triggered
+          # this run.
+          GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
+        with:
+          subject-path: dist/*.tar.gz, dist/*.zip
