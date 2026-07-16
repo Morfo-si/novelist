@@ -22,8 +22,8 @@ const (
 // exist. It is a no-op when the file is present. A stat error that is not
 // "file does not exist" (for example a permission problem) is returned rather
 // than silently treated as absence.
-func EnsureFile(path string) error {
-	_, err := os.Stat(path)
+func EnsureFile(path string) (err error) {
+	_, err = os.Stat(path)
 	if err == nil {
 		return nil
 	}
@@ -37,7 +37,13 @@ func EnsureFile(path string) error {
 	if err != nil {
 		return fmt.Errorf("create %s: %w", path, err)
 	}
-	defer f.Close()
+	// Closing a writable file can surface a deferred write error (e.g. a failed
+	// flush to disk); report it, but never let it mask an earlier failure.
+	defer func() {
+		if cerr := f.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("close %s: %w", path, cerr)
+		}
+	}()
 
 	if _, err := f.WriteString(Header); err != nil {
 		return fmt.Errorf("write header to %s: %w", path, err)
@@ -48,7 +54,7 @@ func EnsureFile(path string) error {
 // Append writes a timestamped entry containing story to path. It is a no-op
 // when story is empty, preserving the original "save nothing for empty input"
 // behavior.
-func Append(path, story string) error {
+func Append(path, story string) (err error) {
 	if story == "" {
 		return nil
 	}
@@ -59,7 +65,13 @@ func Append(path, story string) error {
 	if err != nil {
 		return fmt.Errorf("open %s: %w", path, err)
 	}
-	defer f.Close()
+	// Closing a writable file can surface a deferred write error (e.g. a failed
+	// flush to disk); report it, but never let it mask an earlier failure.
+	defer func() {
+		if cerr := f.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("close %s: %w", path, cerr)
+		}
+	}()
 
 	entry := fmt.Sprintf("\n## %s\n\n%s\n", time.Now().Format(dateFormat), story)
 	if _, err := f.WriteString(entry); err != nil {
