@@ -21,4 +21,6 @@
 go.work
 
 dist/
-novelist
+# Anchored to the repo root: an unanchored `novelist` would also match the
+# cmd/novelist/ source directory and silently ignore new files there.
+/novelist
