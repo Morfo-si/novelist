@@ -1,5 +1,8 @@
 # Novelist
 
+[![CI](https://github.com/Morfo-si/novelist/actions/workflows/ci.yml/badge.svg)](https://github.com/Morfo-si/novelist/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Morfo-si/novelist/badge)](https://scorecard.dev/viewer/?uri=github.com/Morfo-si/novelist)
+
 Capture your thoughts and ideas for your next book or story from the command line.
 
 ![Alt Novelist screenshot](https://github.com/Morfo-si/novelist/assets/53362/64e81990-40f7-42b7-bc4e-2012d92ad599 "Novelist")
@@ -15,23 +18,21 @@ Grab the latest [binary](https://github.com/Morfo-si/novelist/releases) for your
 Just install it with `go`:
 
 ```bash
-go install github.com/Morfo-si/novelist@latest
+go install github.com/Morfo-si/novelist/cmd/novelist@latest
 ```
 
-### Build (requires Go 1.20+)
+(The install path is `.../cmd/novelist` as of v0.0.8; older `.../novelist@latest` no longer resolves.)
+
+### Build
 
 ```bash
 git clone https://github.com/Morfo-si/novelist.git
 cd novelist
-go build
+make build          # stamps the version from the current git tag
+./dist/novelist --version
 ```
 
-Or, to build with the version string injected from the `VERSION` file:
-
-```bash
-make build
-./novelist --version
-```
+To cut a release, tag it: `make release TAG=v0.0.8`.
 
 ## Releasing
 
@@ -39,37 +40,30 @@ Releases are fully automated through GitHub Actions and [GoReleaser](https://gor
 
 ### Cutting a release
 
-1. **Bump the version.** Edit the [`VERSION`](./VERSION) file — it holds a single semver string (e.g. `0.0.7`). Do not prefix it with `v`; the `Makefile` and workflow add that for you.
-2. **Commit and push to `main`.**
+There is no `VERSION` file to bump — the version is derived entirely from the git tag you push.
+
+1. **Make sure `main` is green and your working tree is clean.**
+2. **Tag and push.**
 
    ```bash
-   git add VERSION
-   git commit -m "chore: bump version to $(cat VERSION)"
-   git push origin main
+   make release TAG=v0.0.8
    ```
 
-   Wait for the **PR Checks** workflow to go green.
-3. **Tag and push.**
-
-   ```bash
-   make tag
-   ```
-
-   This runs `git tag -a v$(cat VERSION) -m "Release v$(cat VERSION)"` and pushes the tag to `origin`. The **Release** workflow fires on the tag push and publishes the release within a couple of minutes.
+   This tags the current commit (`git tag -a v0.0.8 -m "Release v0.0.8"`) and pushes the tag to `origin`. The **Release** workflow fires on the tag push and publishes the release within a couple of minutes.
 
 ### Pre-releases
 
-Any tag containing a pre-release identifier (e.g. `v0.1.0-beta.1`, `v1.0.0-rc.1`) is automatically marked as a pre-release on GitHub. To cut one, set `VERSION` to `0.1.0-beta.1` and run the same flow.
+Any tag containing a pre-release identifier (e.g. `v0.1.0-beta.1`, `v1.0.0-rc.1`) is automatically marked as a pre-release on GitHub. To cut one, run `make release TAG=v0.1.0-beta.1`.
 
 ### Dry-running the release locally
 
 Before tagging, you can exercise the entire GoReleaser pipeline locally without publishing anything:
 
 ```bash
-make snapshot
+make release-snapshot
 ```
 
-This runs `goreleaser release --snapshot --clean --skip=publish`. Artifacts land in `./dist/` so you can inspect the archives, checksums and filenames.
+This runs `goreleaser release --snapshot --clean --skip=publish,sign`. Artifacts land in `./dist/` so you can inspect the archives, checksums and filenames.
 
 ### What gets published
 
