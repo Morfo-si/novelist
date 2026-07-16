@@ -1,0 +1,28 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - errorlint
+    - gosec
+    - misspell
+    - revive
+    - unconvert
+  exclusions:
+    presets:
+      # The long-standing errcheck carve-out for writes to stdout/stderr and
+      # for Flush/Close — there is nothing useful to do about those errors in a
+      # CLI, and checking each one buries the real handling.
+      - std-error-handling
+    rules:
+      # Test fixtures deliberately ignore write errors and construct odd paths.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

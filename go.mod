@@ -2,6 +2,8 @@ module github.com/Morfo-si/novelist
 
 go 1.26.2
 
+toolchain go1.26.5
+
 require (
 	charm.land/huh/v2 v2.0.3
 	github.com/adrg/xdg v0.5.3
