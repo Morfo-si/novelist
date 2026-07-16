@@ -8,7 +8,11 @@ on:
     - cron: '0 8 * * 1'
   workflow_dispatch:
 
-permissions: read-all
+# Minimal default; the analysis job below grants itself exactly the scopes it
+# needs. A workflow-level read-all is broader than required and both SonarCloud
+# and Scorecard's own Token-Permissions check flag it.
+permissions:
+  contents: read
 
 jobs:
   analysis:
