@@ -1,73 +1,123 @@
 # .goreleaser.yaml — https://goreleaser.com
 version: 2
 
+project_name: novelist
+
 before:
   hooks:
-    - go mod tidy
+    # Read-only by design: GoReleaser validates git state before these run, so
+    # a hook that mutated go.mod would go undetected and the release would not
+    # match the tagged commit.
     - go mod verify
 
 builds:
   - id: novelist
-    main: .
+    main: ./cmd/novelist
     binary: novelist
     env:
       - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
     goos:
       - linux
-      - windows
       - darwin
+      - windows
     goarch:
       - amd64
       - arm64
-    # Inject the git tag as the version string at compile time.
-    ldflags:
-      - -s -w -X main.version={{.Version}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
   - id: default
-    # Use .zip for Windows, .tar.gz for everything else.
-    formats:
-      - tar.gz
+    ids:
+      - novelist
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         formats:
           - zip
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
-      - LICENSE
       - README.md
+      - LICENSE
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: checksums.txt
   algorithm: sha256
+
+sboms:
+  - id: archives
+    artifacts: archive
+
+signs:
+  # cosign 3.x (installed by sigstore/cosign-installer@v4.1.2) dropped separate
+  # signature/certificate outputs in favour of a single bundle: keep this in
+  # bundle form as long as cosign-installer tracks the 3.x line.
+  - id: checksums
+    cmd: cosign
+    signature: "${artifact}.bundle"
+    args:
+      - sign-blob
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
 
 changelog:
   sort: asc
   use: github
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Build and CI
+      regexp: '^.*?(build|ci)(\(.+\))??!?:.+$'
+      order: 2
+    - title: Other
+      order: 999
   filters:
     exclude:
-      - "^chore:"
       - "^docs:"
       - "^test:"
-      - Merge pull request
-      - Merge branch
+      - "^chore:"
+      - "Merge pull request"
 
 release:
   github:
     owner: Morfo-si
     name: novelist
-  # Mark as pre-release if the tag contains a pre-release identifier (e.g. v1.0.0-beta.1).
-  prerelease: auto
   draft: false
+  prerelease: auto
   footer: |
-    ## Installation
+    ## Verifying this release
 
-    Download the archive for your platform from the assets below, extract it, and place the `novelist` binary somewhere on your `$PATH`.
+    Checksums are signed with [cosign](https://docs.sigstore.dev/) keylessly —
+    there is no private key. Download `checksums.txt` and
+    `checksums.txt.bundle`, then:
 
-    **Linux / macOS**
     ```sh
-    tar -xzf novelist_{{ .Version }}_linux_amd64.tar.gz
-    sudo mv novelist /usr/local/bin/
+    cosign verify-blob \
+      --bundle checksums.txt.bundle \
+      --certificate-identity-regexp 'https://github\.com/Morfo-si/novelist/\.github/workflows/.+' \
+      --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+      checksums.txt
     ```
 
-    **Windows** — extract the `.zip` and add the folder to your `PATH`.
+    Then check your archive against it:
+
+    ```sh
+    sha256sum --check --ignore-missing checksums.txt
+    ```
+
+    ## Installation
+
+    Download the archive for your platform, extract it, and put the `novelist`
+    binary on your `$PATH`.
