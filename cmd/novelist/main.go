@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/adrg/xdg"
 
@@ -30,7 +31,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 {
 		switch args[0] {
 		case "--version", "-v", "version":
-			fmt.Fprintf(stdout, "novelist %s\n", version)
+			fmt.Fprintf(stdout, "novelist %s\n", resolveVersion(version, readBuildInfoVersion()))
 			return 0
 		}
 	}
@@ -56,4 +57,29 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stdout, "Okay. Your thoughts have been saved to %s\n", path)
 	}
 	return 0
+}
+
+// resolveVersion picks the version string to display. An explicit ldflag
+// version (anything other than the "dev" default) always wins. Otherwise it
+// falls back to the module version recorded in the build info, unless that
+// is empty or Go's "(devel)" placeholder for a non-release build.
+func resolveVersion(ldflagVersion, buildInfoVersion string) string {
+	if ldflagVersion != "dev" {
+		return ldflagVersion
+	}
+	if buildInfoVersion != "" && buildInfoVersion != "(devel)" {
+		return buildInfoVersion
+	}
+	return ldflagVersion
+}
+
+// readBuildInfoVersion returns the main module's version as recorded by the
+// Go toolchain (e.g. set via `go install pkg@version`), or "" if build info
+// is unavailable.
+func readBuildInfoVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	return info.Main.Version
 }

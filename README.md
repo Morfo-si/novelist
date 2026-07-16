@@ -32,8 +32,6 @@ make build          # stamps the version from the current git tag
 ./dist/novelist --version
 ```
 
-To cut a release, tag it: `make release TAG=v0.0.8`.
-
 ## Releasing
 
 Releases are fully automated through GitHub Actions and [GoReleaser](https://goreleaser.com). Pushing a `v*` tag triggers a workflow that cross-compiles binaries for Linux, macOS and Windows (amd64 + arm64), uploads them to a new GitHub Release, and generates a changelog from the commits since the previous tag.
