@@ -15,7 +15,7 @@ jobs:
       id-token: write      # keyless cosign signing and attestation
       attestations: write  # build provenance
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0   # GoReleaser needs full history for the changelog
 
@@ -48,6 +48,6 @@ jobs:
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
 
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: dist/*.tar.gz, dist/*.zip
